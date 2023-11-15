@@ -1,0 +1,3 @@
+#+title: macOS
+
+~macos~ provides a few convenience functions for macOS.
