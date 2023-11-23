@@ -27,7 +27,26 @@
 
 ;;; Code:
 
+;;;; User options
+
+(defgroup macos ()
+  "Convenience functions for macOS."
+  :group 'emacs)
+
+(defcustom macos-blueutil "blueutil"
+  "Path to `blueutil'."
+  :type 'string
+  :group 'macos)
+
+(defcustom macos-bluetooth-device-list '()
+  "List of bluetooth devices.
+Run `blueutil --paired' to see paired devices"
+  :type '(alist :key-type string :value-type string)
+  :group 'macos)
+
 ;;;; Functions
+
+;;;;; homebrew
 
 (defun macos-update-homebrew ()
   "Update Homebrew."
@@ -36,58 +55,55 @@
     (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
     (message "Update process finished.")))
 
-;; run `blueutil --connected' to see connected devices
-(defun macos-bluetooth-device-dwim (MAC &optional device action)
+;;;;; bluetooth
+
+(defun macos-bluetooth-device-dwim (device &optional action)
+  "Connect to DEVICE if disconnected, and vice versa.
+If ACTION is \"connect\" or \"disconnect\", do nothing if already
+connected or disconnected, respectively."
+  (interactive (list (if (eq (length macos-bluetooth-device-list) 1)
+			 (caar macos-bluetooth-device-list)
+		       (completing-read "Device: " macos-bluetooth-device-list nil t))))
+  (let ((MAC (alist-get device macos-bluetooth-device-list nil nil #'string=)))
+    (macos--bluetooth-device MAC device action)))
+
+(defun macos--bluetooth-device (MAC &optional device action)
   "Connect to DEVICE in MAC address if disconnected, and vice versa.
 If ACTION is \"connect\" or \"disconnect\", do nothing if already
 connected or disconnected, respectively."
-  (let ((app "blueutil"))
-    (unless (executable-find app)
-      (user-error "Please install %s (https://github.com/toy/blueutil)" app))
-    (let* ((status (macos-bluetooth-device-status MAC))
-           (action (or action (pcase status
-                                ("connected" "disconnect")
-                                ("not connected" "connect")
-                                (_ (user-error "Unknown status: %s" status)))))
-           (device (or device MAC)))
-      (when (y-or-n-p (format "%s is currently %s. %s? "
-                              device status action))
-        (pcase (shell-command-to-string (format "%s --%s %s" app action MAC))
-          ("" (message "%s: %sed" device action))
-          (_ (user-error "Failed to %s %s" action device)))))))
+  (unless (executable-find macos-blueutil)
+    (user-error "Please install `blueutil' (https://github.com/toy/blueutil) and set `macos-blueutil' accordingly"))
+  (let* ((status (macos-bluetooth-device-status MAC))
+         (action (or action (pcase status
+			      ("connected" "disconnect")
+			      ("not connected" "connect")
+			      (_ (user-error "Unknown status: %s" status)))))
+         (device (or device MAC)))
+    (when (y-or-n-p (format "%s is currently %s. %s? "
+                            device status action))
+      (pcase (shell-command-to-string (format "%s --%s %s" macos-blueutil action MAC))
+        ("" (message "%s: %sed" device action))
+        (_ (user-error "Failed to %s %s" action device))))))
 
 (defun macos-bluetooth-device-status (MAC)
   "Return the connection status of bluetooth device in address MAC."
-  (let* ((app "blueutil")
-         (output (shell-command-to-string (format "%s --info %s" app MAC))))
+  (let* ((output (shell-command-to-string (format "%s --info %s" macos-blueutil MAC))))
     (string-match (format "address: %s, \\([a-z ]*connected\\)" MAC) output)
     (match-string 1 output)))
 
-(defun macos-airpods-max-dwim (&optional action)
-  "Connect to AirPods Max if disconnected, and vice versa.
-If ACTION is \"connect\" or \"disconnect\", do nothing if already
-connected or disconnected, respectively."
-  (interactive)
-  (macos-bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" action))
-
-(defun macos-sony-wh1000xm5-dwim (&optional action)
-  "Connect to Sonny if disconnected, and vice versa.
-If ACTION is \"connect\" or \"disconnect\", do nothing if already
-connected or disconnected, respectively."
-  (interactive)
-  (macos-bluetooth-device-dwim "ac-80-0a-37-41-1e" "Sonny WH-1000XM5" action))
+;;;;; sleep
 
 (defun macos-sleep ()
   "Put the system to sleep."
   (interactive)
-  ;; (message "Disconnecting devices...")
-  ;; (ps/airpods-max-dwim 'disconnect)
-  ;; (ps/eject-external-hard-drive)
   (shell-command "osascript -e 'tell application \"Finder\" to sleep'"))
 
-(defun eject-external-hard-drive ()
-  "Eject external hard drive.
-Assumes only one external hard drive is connected."
+;;;;; hard drive
+
+;; Assumes only one external hard drive is connected.
+;; TODO: Make this more robust.
+(defun macos-eject-external-hard-drive ()
+  "Eject external hard drive."
   (interactive)
   (let ((list-external
          (shell-command-to-string
