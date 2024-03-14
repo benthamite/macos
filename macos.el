@@ -138,10 +138,11 @@ connected or disconnected, respectively."
      (string= "true"
 	      (string-trim (shell-command-to-string script))))))
 
-(defun macos-open-app (app)
-  "Open macOS APP."
+(defun macos-open-app (app &optional background)
+  "Open macOS APP.
+If BACKGROUND is non-nil, open the app in the background"
   (when-macos 
-   (shell-command (format "open -a %s" app))))
+   (shell-command (format "open %s-a %s" (if background "-g " "") app))))
 
 (provide 'macos)
 ;;; macos.el ends here
