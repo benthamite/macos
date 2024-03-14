@@ -118,5 +118,13 @@ connected or disconnected, respectively."
           match))
       (message "No external hard drives found."))))
 
+;;;;; open apps
+
+(defun macos-app-is-open-p (app)
+  "Return t iff APP is open on macOS."
+  (let ((script (format "osascript -e 'application \"%s\" is running'" app)))
+    (string= "true"
+             (string-trim (shell-command-to-string script)))))
+
 (provide 'macos)
 ;;; macos.el ends here
