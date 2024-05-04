@@ -144,5 +144,17 @@ If BACKGROUND is non-nil, open the app in the background"
   (when-macos 
    (shell-command (format "open %s-a %s" (if background "-g " "") app))))
 
+;;;;; open files
+
+(defun macos-open-in-finder (file)
+  "Open FILE in Finder."
+  (let ((script (concat
+		 "set thePath to POSIX file \"" file "\"\n"
+		 "tell application \"Finder\"\n"
+		 " set frontmost to true\n"
+		 " reveal thePath \n"
+		 "end tell\n")))
+    (start-process "osascript-getinfo" nil "osascript" "-e" script)))
+
 (provide 'macos)
 ;;; macos.el ends here
