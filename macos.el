@@ -156,5 +156,12 @@ If BACKGROUND is non-nil, open the app in the background"
 		 "end tell\n")))
     (start-process "osascript-getinfo" nil "osascript" "-e" script)))
 
+;;;;; keyboard maestro
+
+(defun macos-run-keyboard-maestro-script (id)
+  "Run Keyboard Maestro script with ID."
+  (shell-command
+   (format "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"%s\"'" id)))
+
 (provide 'macos)
 ;;; macos.el ends here
