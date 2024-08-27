@@ -44,6 +44,20 @@ Run `blueutil --paired' to see paired devices"
   :type '(alist :key-type string :value-type string)
   :group 'macos)
 
+(defcustom macos-announce-the-time-interval
+  "EveryHalfHourInterval"
+  "Interval at which time announcements are made.
+Possible values are `\"EveryHalfHourInterval\"', `\"EveryQuarterHourInterval\"'
+and `\"EveryHourInterval\"'."
+  :type 'string
+  :group 'macos)
+
+;;;; Variables
+
+(defconst macos-announce-the-time-command
+  "defaults %s ~/Library/Preferences/com.apple.speech.synthesis.general.prefs TimeAnnouncementPrefs"
+  "Command to check if time announcements are enabled on macOS.")
+
 ;;;; Functions
 
 (defmacro when-macos (&rest body)
@@ -155,6 +169,32 @@ If BACKGROUND is non-nil, open the app in the background"
 		 " reveal thePath \n"
 		 "end tell\n")))
     (start-process "osascript-getinfo" nil "osascript" "-e" script)))
+
+;;;;; announce the time
+
+(defun macos-announce-the-time ()
+  "Toggle time announcements on and off.
+To set the time announcement interval, customize
+`macos-announce-the-time-interval'."
+  (interactive)
+  (let* ((action (if (macos-announce-the-time-disabled-p) "YES" "NO"))
+	 (command-with-flags (concat (format macos-announce-the-time-command "write")
+				     (format " -dict TimeAnnouncementsEnabled -bool %s " action)
+				     (macos-make-announce-the-time-interval-flag)))
+	 (message (format "Time announcements are now %s"
+			  (if (macos-announce-the-time-disabled-p) "enabled" "disabled"))))
+    (shell-command command-with-flags)
+    (message message)))
+
+(defun macos-announce-the-time-disabled-p ()
+  "Check if time announcements are disabled on macOS."
+  (let ((output (shell-command-to-string (format macos-announce-the-time-command "read"))))
+    (string-match-p "TimeAnnouncementsEnabled = 0;" output)))
+
+(defun macos-make-announce-the-time-interval-flag ()
+  "Make the flag for the time announcement interval."
+  (format "TimeAnnouncementsIntervalIdentifier -string %s"
+	  macos-announce-the-time-interval))
 
 ;;;;; keyboard maestro
 
