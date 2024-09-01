@@ -52,6 +52,11 @@ and `\"EveryHourInterval\"'."
   :type 'string
   :group 'macos)
 
+(defcustom macos-homebrew-excluded-casks '()
+  "List of casks to exclude from `macos-update-homebrew'."
+  :type '(repeat string)
+  :group 'macos)
+
 ;;;; Variables
 
 (defconst macos-announce-the-time-command
@@ -68,12 +73,33 @@ and `\"EveryHourInterval\"'."
 ;;;;; homebrew
 
 (defun macos-update-homebrew ()
-  "Update Homebrew."
+  "Update Homebrew.
+This command updates Homebrew itself, upgrades all installed formulae and casks,
+cleans up old versions, and runs brew doctor. Casks listed in
+`macos-homebrew-excluded-casks' will be excluded from the installation."
   (interactive)
   (when-macos
-   (let ((shell-command-buffer-name-async "*homebrew update*"))
-     (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
-     (message "Update process finished."))))
+   (let* ((shell-command-buffer-name-async "/homebrew update/")
+	  (temp-dir (make-temp-file "homebrew-exclude-" t))
+	  (move-to-temp (macos-make-move-casks-command temp-dir))
+	  (move-back (macos-make-move-casks-command temp-dir 'reverse)))
+     (async-shell-command
+      (format
+       "(%s brew update && brew upgrade --greedy && brew cleanup && brew doctor && %2$s) || echo 'Error occurred'; %2$s" move-to-temp move-back))
+     (message "Update process started. Excluded casks: %s" macos-homebrew-excluded-casks))))
+
+(defun macos-make-move-casks-command (temp-dir &optional reverse)
+  "Make a command to move casks to TEMP-DIR.
+IF REVERSE is non-nil, make a command to move casks back to their original
+location."
+  (let* ((caskroom-dir "/opt/homebrew/Caskroom")
+	 (format-string "mv %s/%s %s/ 2>/dev/null; "))
+    (mapconcat
+     (lambda (cask)
+       (format (if reverse
+		   (format format-string temp-dir cask caskroom-dir)
+		 (format format-string caskroom-dir cask temp-dir))))
+     macos-homebrew-excluded-casks "")))
 
 ;;;;; bluetooth
 
