@@ -224,10 +224,12 @@ To set the time announcement interval, customize
 
 ;;;;; keyboard maestro
 
-(defun macos-run-keyboard-maestro-script (id)
-  "Run Keyboard Maestro script with ID."
+(defun macos-run-keyboard-maestro-script (uuid &optional _description)
+  "Run Keyboard Maestro script with UUID.
+DESCRIPTION is the description of the script. This value is not used; it is only
+to document the script’s behavior, which is not legible from its UUID."
   (shell-command
-   (format "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"%s\"'" id)))
+   (format "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"%s\"'" uuid)))
 
 (provide 'macos)
 ;;; macos.el ends here
