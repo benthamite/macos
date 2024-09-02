@@ -155,7 +155,7 @@ connected or disconnected, respectively."
 (defun macos-eject-external-hard-drive ()
   "Eject external hard drive."
   (interactive)
-  (when-macos  
+  (when-macos
    (let ((list-external
           (shell-command-to-string
            "diskutil list external")))
@@ -181,7 +181,7 @@ connected or disconnected, respectively."
 (defun macos-open-app (app &optional background)
   "Open macOS APP.
 If BACKGROUND is non-nil, open the app in the background"
-  (when-macos 
+  (when-macos
    (shell-command (format "open %s-a %s" (if background "-g " "") app))))
 
 ;;;;; open files
