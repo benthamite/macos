@@ -72,6 +72,7 @@ and `\"EveryHourInterval\"'."
 
 ;;;;; homebrew
 
+;;;###autoload
 (defun macos-update-homebrew ()
   "Update Homebrew.
 This command updates Homebrew itself, upgrades all installed formulae and casks,
@@ -103,6 +104,7 @@ location."
 
 ;;;;; bluetooth
 
+;;;###autoload
 (defun macos-bluetooth-device-dwim (device &optional action)
   "Connect to DEVICE if disconnected, and vice versa.
 If ACTION is \"connect\" or \"disconnect\", do nothing if already
@@ -198,6 +200,7 @@ If BACKGROUND is non-nil, open the app in the background"
 
 ;;;;; announce the time
 
+;;;###autoload
 (defun macos-announce-the-time ()
   "Toggle time announcements on and off.
 To set the time announcement interval, customize
