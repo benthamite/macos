@@ -173,6 +173,7 @@ connected or disconnected, respectively."
 
 ;;;;; open apps
 
+;;;###autoload
 (defun macos-app-is-open-p (app)
   "Return t iff APP is open on macOS."
   (when-macos
