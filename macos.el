@@ -182,6 +182,7 @@ connected or disconnected, respectively."
      (string= "true"
 	      (string-trim (shell-command-to-string script))))))
 
+;;;###autoload
 (defun macos-open-app (app &optional background)
   "Open macOS APP.
 If BACKGROUND is non-nil, open the app in the background"
