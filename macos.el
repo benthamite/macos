@@ -65,7 +65,7 @@ and `\"EveryHourInterval\"'."
 
 ;;;; Functions
 
-;;;###autoload (autoload 'tlon-meet-menu "macos.el" nil t)
+;;;###autoload (autoload 'when-macos "macos.el" nil t)
 (defmacro when-macos (&rest body)
   "Run BODY only if `system-type' is darwin."
   `(when (eq system-type 'darwin)
