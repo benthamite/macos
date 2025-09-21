@@ -87,7 +87,8 @@ cleans up old versions, and runs brew doctor. Casks listed in
 	  (move-back (macos-make-move-casks-command temp-dir 'reverse)))
      (async-shell-command
       (format
-       "(%s brew update && brew upgrade --greedy && brew cleanup && brew doctor && %2$s) || echo 'Error occurred'; %2$s" move-to-temp move-back))
+       "%s trap '{ %s:; }' EXIT; brew update-reset -q || true; brew update && brew upgrade --greedy && brew cleanup && brew doctor"
+       move-to-temp move-back))
      (message "Update process started. Excluded casks: %s" macos-homebrew-excluded-casks))))
 
 (defun macos-make-move-casks-command (temp-dir &optional reverse)
